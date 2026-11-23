@@ -1,6 +1,9 @@
 node_modules/
-*/node_modules/
 .env
-*/.env
+.env.*
+!.env.example
 dist/
-*/dist/
+build/
+*.log
+
+server/reset-provider-password.js

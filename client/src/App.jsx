@@ -3,7 +3,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./App.css";
 
-const API_URL = "https://appointment-api-1p7q.onrender.com";
+import API_URL from "./config";
 
 function timeToMinutes(timeStr) {
   const [hours, minutes] = timeStr.split(":").map(Number);
@@ -750,163 +750,178 @@ function App() {
     );
   }
 
-  // =====================================================
-  // VIEW: AUTH
-  // =====================================================
+
   if (!token) {
+    const isDoctor = loginType === "provider";
+
     return (
-      <div className="app auth-bg">
-        <header className="header">
-          <div className="header-content auth-header">
-            <h1>MedCare Appointments</h1>
-            <p>Connect with top-rated doctors and book convenient visiting slots.</p>
+      <div className="app medcare-auth">
+        <header className="medcare-nav">
+          <div className="medcare-nav-inner">
+            <div className="medcare-logo">
+              <span className="medcare-logo-icon" aria-hidden="true">+</span>
+              <div>
+                <strong>MedCare</strong>
+                <small>Appointments made simple</small>
+              </div>
+            </div>
+            <span className="medcare-nav-caption">Healthcare, made easier</span>
           </div>
         </header>
 
-        <main className="container auth-container">
-          <section className="card login-card">
-            {!isRegistering ? (
-              <>
-                <div className="form-heading">
-                  <h2>Sign In</h2>
-                  <p>Access your dashboard to book appointments</p>
+        <main className="medcare-auth-main">
+          <section className="medcare-welcome">
+            <div className="medcare-welcome-content">
+              <span className="medcare-eyebrow">YOUR HEALTHCARE COMPANION</span>
+              <h1>Better care begins with a <span>simple booking.</span></h1>
+              <p className="medcare-welcome-description">
+                Find healthcare professionals, schedule appointments at your
+                convenience, and manage your visits in one place.
+              </p>
+              <div className="medcare-feature-list">
+                <div className="medcare-feature">
+                  <span className="medcare-feature-icon">01</span>
+                  <div><h3>Find the right doctor</h3><p>Explore providers and their specializations.</p></div>
                 </div>
-
-                <div className="input-group">
-                  <label>Login As</label>
-                  <select
-                    value={loginType}
-                    onChange={(e) => {
-                      setLoginType(e.target.value);
-                      setMessage("");
-                    }}
-                  >
-                    <option value="patient">Patient</option>
-                    <option value="provider">Doctor / Provider</option>
-                  </select>
+                <div className="medcare-feature">
+                  <span className="medcare-feature-icon">02</span>
+                  <div><h3>Book a convenient slot</h3><p>Choose an available appointment time.</p></div>
                 </div>
-
-                <form onSubmit={handleLogin}>
-                  <div className="input-group">
-                    <label>Email Address</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      required
-                    />
-                  </div>
-
-                  <div className="input-group">
-                    <label>Password</label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
-                      required
-                    />
-                  </div>
-
-                  <button type="submit" className="primary-btn" disabled={loading}>
-                    {loading ? "Signing in..." : "Sign In"}
-                  </button>
-                </form>
-
-                <p className="switch-text">
-                  New patient?{" "}
-                  <button
-                    type="button"
-                    className="link-button"
-                    onClick={() => {
-                      setIsRegistering(true);
-                      setMessage("");
-                      setLoginType("patient");
-                    }}
-                  >
-                    Create an account
-                  </button>
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="form-heading">
-                  <h2>Create Patient Account</h2>
-                  <p>Register to schedule doctor visits</p>
+                <div className="medcare-feature">
+                  <span className="medcare-feature-icon">03</span>
+                  <div><h3>Manage your visits</h3><p>Keep track of upcoming and past appointments.</p></div>
                 </div>
+              </div>
+              <p className="medcare-welcome-footer">Designed for patients and healthcare providers.</p>
+            </div>
+          </section>
 
-                <form onSubmit={handleRegister}>
-                  <div className="input-group">
-                    <label>Full Name</label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. John Doe"
-                      required
-                    />
+          <section className="medcare-auth-panel">
+            <div className="medcare-auth-card">
+              <div className="medcare-card-heading">
+                <span className="medcare-card-eyebrow">
+                  {isRegistering ? "JOIN MEDCARE" : "WELCOME BACK"}
+                </span>
+                <h2>{isRegistering ? "Create your account" : "Sign in to your account"}</h2>
+                <p>{isRegistering ? "Register as a patient to book appointments." : "Choose how you'd like to sign in."}</p>
+              </div>
+
+              {!isRegistering ? (
+                <>
+                  <div className="medcare-role-switch" role="group" aria-label="Account type">
+                    <button type="button"
+                      className={`medcare-role-option ${!isDoctor ? "active" : ""}`}
+                      aria-pressed={!isDoctor}
+                      onClick={() => {
+                        setLoginType("patient");
+                        setEmail("");
+                        setPassword("");
+                        setMessage("");
+                      }}>
+                      <span className="medcare-role-symbol">P</span>
+                      <span><strong>Patient</strong><small>Book appointments</small></span>
+                    </button>
+                    <button type="button"
+                      className={`medcare-role-option ${isDoctor ? "active" : ""}`}
+                      aria-pressed={isDoctor}
+                      onClick={() => {
+                        setLoginType("provider");
+                        setEmail("");
+                        setPassword("");
+                        setMessage("");
+                      }}>
+                      <span className="medcare-role-symbol">D</span>
+                      <span><strong>Doctor</strong><small>Manage patients</small></span>
+                    </button>
                   </div>
-
-                  <div className="input-group">
-                    <label>Email Address</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      required
-                    />
-                  </div>
-
-                  <div className="input-group">
-                    <label>Password</label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Minimum 6 characters"
-                      minLength={6}
-                      required
-                    />
-                  </div>
-
-                  <div className="input-group">
-                    <label>Account Type</label>
-                    <select value={emailType} onChange={(e) => setEmailType(e.target.value)}>
-                      <option value="personal">Personal</option>
-                      <option value="college">Student / College</option>
-                      <option value="work">Work / Corporate</option>
-                    </select>
-                  </div>
-
-                  <button type="submit" className="primary-btn" disabled={loading}>
-                    {loading ? "Creating account..." : "Register Now"}
-                  </button>
-                </form>
-
-                <p className="switch-text">
-                  Already registered?{" "}
-                  <button
-                    type="button"
-                    className="link-button"
-                    onClick={() => {
+                  <p className="medcare-role-description">
+                    {isDoctor
+                      ? "Sign in to review and manage your appointment requests."
+                      : "Sign in to book appointments and track your visits."}
+                  </p>
+                  <form className="medcare-auth-form" onSubmit={handleLogin}>
+                    <div className="input-group">
+                      <label htmlFor="medcare-email">Email address</label>
+                      <input id="medcare-email" type="email" value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="Enter your email" autoComplete="email" required />
+                    </div>
+                    <div className="input-group">
+                      <label htmlFor="medcare-password">Password</label>
+                      <input id="medcare-password" type="password" value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder="Enter your password" autoComplete="current-password" required />
+                    </div>
+                    <button className="medcare-submit" type="submit" disabled={loading}>
+                      {loading ? "Signing in..." : `Sign in as ${isDoctor ? "Doctor" : "Patient"}`}
+                    </button>
+                  </form>
+                  {!isDoctor && (
+                    <p className="medcare-auth-switch">
+                      New to MedCare?{" "}
+                      <button type="button" onClick={() => {
+                        setIsRegistering(true);
+                        setMessage("");
+                        setPassword("");
+                      }}>Create an account</button>
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <form className="medcare-auth-form" onSubmit={handleRegister}>
+                    <div className="input-group">
+                      <label htmlFor="medcare-name">Full name</label>
+                      <input id="medcare-name" type="text" value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        placeholder="Enter your full name" autoComplete="name" required />
+                    </div>
+                    <div className="input-group">
+                      <label htmlFor="medcare-register-email">Email address</label>
+                      <input id="medcare-register-email" type="email" value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="Enter your email" autoComplete="email" required />
+                    </div>
+                    <div className="input-group">
+                      <label htmlFor="medcare-register-password">Password</label>
+                      <input id="medcare-register-password" type="password" value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder="At least 6 characters" autoComplete="new-password"
+                        minLength={6} required />
+                    </div>
+                    <div className="input-group">
+                      <label htmlFor="medcare-email-type">Email category</label>
+                      <select id="medcare-email-type" value={emailType}
+                        onChange={(event) => setEmailType(event.target.value)}>
+                        <option value="personal">Personal</option>
+                        <option value="college">Student / College</option>
+                        <option value="work">Work / Corporate</option>
+                      </select>
+                    </div>
+                    <button className="medcare-submit" type="submit" disabled={loading}>
+                      {loading ? "Creating account..." : "Create patient account"}
+                    </button>
+                  </form>
+                  <p className="medcare-auth-switch">
+                    Already registered?{" "}
+                    <button type="button" onClick={() => {
                       setIsRegistering(false);
+                      setLoginType("patient");
+                      setPassword("");
                       setMessage("");
-                    }}
-                  >
-                    Back to Sign In
-                  </button>
-                </p>
-              </>
-            )}
-
-            {message && <div className="message">{message}</div>}
+                    }}>Sign in</button>
+                  </p>
+                </>
+              )}
+              {message && <div className="medcare-auth-message" role="status">{message}</div>}
+            </div>
+            <p className="medcare-panel-footer">MedCare · Appointment management platform</p>
           </section>
         </main>
       </div>
     );
   }
+
 
   // =====================================================
   // VIEW: PATIENT DASHBOARD
