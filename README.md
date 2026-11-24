@@ -111,6 +111,54 @@ Local development URLs:
 
 - Frontend: http://localhost:5173
 - Backend: http://localhost:5000
+## System Architecture
+
+MedCare follows a three-tier architecture that separates the user interface, backend business logic, and database.
+
+```mermaid
+flowchart TD
+    A[Patients and Doctors] --> B
+
+    subgraph Frontend["Frontend - Render Static Site"]
+        B[React.js + Vite]
+        B --- B1[Patient Dashboard]
+        B --- B2[Doctor Dashboard]
+    end
+
+    B <-->|HTTPS REST API| C
+
+    subgraph Backend["Backend - Render Web Service"]
+        C[Node.js + Express.js]
+        C --> D[JWT Authentication and bcrypt]
+        C --> E[Appointment Management]
+        C --> F[Provider Management]
+        D --> G[Mongoose ODM]
+        E --> G
+        F --> G
+    end
+
+    G <--> H
+
+    subgraph Database["Cloud Database"]
+        H[(MongoDB Atlas)]
+        H --- I[Users Collection]
+        H --- J[Providers Collection]
+        H --- K[Appointments Collection]
+    end
+
+    style B fill:#0284c7,color:#fff
+    style C fill:#7c3aed,color:#fff
+    style H fill:#15803d,color:#fff
+```
+
+### Architecture Overview
+
+- **Presentation Layer:** React.js and Vite provide the patient and doctor interfaces.
+- **Application Layer:** Node.js and Express.js handle REST API requests and business logic.
+- **Authentication Layer:** JWT and bcrypt support authentication and password security.
+- **Data Layer:** MongoDB Atlas stores user, provider, and appointment records through Mongoose.
+- **Deployment:** The frontend and backend are hosted separately on Render.
+
 ## Deployment
 
 The application is deployed on Render and uses MongoDB Atlas as its cloud database. Source code is maintained on GitHub.
