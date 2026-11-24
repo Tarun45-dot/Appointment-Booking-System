@@ -111,10 +111,29 @@ Local development URLs:
 
 - Frontend: http://localhost:5173
 - Backend: http://localhost:5000
-
 ## Deployment
 
 The application is deployed on Render and uses MongoDB Atlas as its cloud database. Source code is maintained on GitHub.
+
+## Application Screenshots
+
+### Login Page
+![Login Page](screenshots/login.png)
+
+### Patient Registration
+![Patient Registration](screenshots/registration.png)
+
+### Patient Dashboard
+![Patient Dashboard](screenshots/patient-dashboard.png)
+
+### Appointment Booking
+![Appointment Booking](screenshots/appointment-booking.png)
+
+### Doctor Dashboard
+![Doctor Dashboard](screenshots/doctor-dashboard.png)
+
+### Appointment History
+![Appointment History](screenshots/appointment-history.png)
 
 ## Developer
 
