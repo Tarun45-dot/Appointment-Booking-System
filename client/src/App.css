@@ -1120,3 +1120,16 @@ button:hover { background: #1d4ed8; box-shadow: 0 8px 18px rgba(37,99,235,.18); 
 .medcare-panel-footer{margin:0;color:#98a5b6;font-size:11px;text-align:center}
 @media(max-width:980px){.medcare-auth-main{grid-template-columns:1fr}.medcare-welcome{padding:55px 28px}.medcare-welcome-content{max-width:650px}.medcare-auth-panel{padding:55px 24px}}
 @media(max-width:600px){.medcare-nav-inner{min-height:72px;padding:14px 18px}.medcare-nav-caption{display:none}.medcare-welcome{padding:42px 22px}.medcare-welcome h1{font-size:37px;letter-spacing:-1.4px}.medcare-welcome-description{font-size:14px}.medcare-auth-panel{padding:40px 20px}.medcare-card-heading h2{font-size:26px}.medcare-role-option{padding:10px;gap:8px}.medcare-role-symbol{flex-basis:30px;height:30px}}
+
+/* Authentication validation controls */
+.medcare-password-wrap { position: relative; width: 100%; }
+.medcare-auth-form .medcare-password-wrap input { padding-right: 76px; }
+.medcare-password-toggle, .medcare-password-toggle:hover { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); padding: 8px 10px; background: transparent; color: #2169d1; box-shadow: none; font-size: 12px; }
+.medcare-password-rules { width: 100%; padding: 12px; background: #f6f9fd; border: 1px solid #dce5ef; border-radius: 10px; font-size: 12px; color: #475569; }
+.medcare-password-rules ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 5px; }
+.medcare-password-meter { display: flex; gap: 4px; margin-bottom: 8px; }
+.medcare-password-meter span { flex: 1; height: 5px; border-radius: 4px; background: #dce5ef; }
+.medcare-password-meter .partial { background: #d97706; }
+.medcare-password-meter .met { background: #15803d; }
+.password-ok { color: #166534; }
+.password-error { color: #b91c1c; }

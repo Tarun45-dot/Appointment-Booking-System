@@ -15,22 +15,27 @@ const appointmentSchema = new mongoose.Schema(
     date: {
       type: String,
       required: true,
+      trim: true,
     },
     time: {
       type: String,
       required: true,
+      trim: true,
     },
     phone: {
       type: String,
       required: true,
+      trim: true,
     },
     place: {
       type: String,
       required: true,
+      trim: true,
     },
     reason: {
       type: String,
       default: "",
+      trim: true,
     },
     status: {
       type: String,
@@ -45,9 +50,33 @@ const appointmentSchema = new mongoose.Schema(
     feedback: {
       type: String,
       default: "",
+      trim: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model("Appointment", appointmentSchema);
+// Prevent duplicate active appointment bookings
+appointmentSchema.index(
+  {
+    provider: 1,
+    date: 1,
+    time: 1,
+  },
+  {
+    unique: true,
+    name: "unique_active_appointment_slot",
+    partialFilterExpression: {
+      status: {
+        $in: ["pending", "confirmed"],
+      },
+    },
+  }
+);
+
+module.exports = mongoose.model(
+  "Appointment",
+  appointmentSchema
+);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./App.css";
@@ -69,6 +69,20 @@ function App() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const authBusy = useRef(false);
+  const passwordRules = [
+    ["At least 8 characters", password.length >= 8],
+    ["One uppercase letter", /[A-Z]/.test(password)],
+    ["One lowercase letter", /[a-z]/.test(password)],
+    ["One number", /[0-9]/.test(password)],
+    ["One special character", /[^A-Za-z0-9\s]/.test(password)],
+    ["Maximum 72 UTF-8 bytes", !!password && new TextEncoder().encode(password).length <= 72]
+  ];
+  const passwordScore = passwordRules.filter(([, ok]) => ok).length;
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && email.trim().length <= 254;
   const [emailType, setEmailType] = useState("personal");
 
   // =====================================================
@@ -234,7 +248,7 @@ function App() {
       if (response.ok && data.success) {
         setAppointments(data.appointments || []);
       } else if (response.status === 401) {
-        handleLogout();
+        handleLogout("Session expired. Please sign in again.");
       }
     } catch (error) {
       console.error("Failed to load appointments:", error);
@@ -252,7 +266,7 @@ function App() {
         setProviderAppointments(data.appointments || []);
       } else if (response.status === 401) {
         setMessage("Provider session expired. Please login again.");
-        handleLogout();
+        handleLogout("Session expired. Please sign in again.");
       } else {
         setMessage(data.message || "Failed to load provider appointments.");
       }
@@ -267,7 +281,11 @@ function App() {
   // =====================================================
   async function handleLogin(event) {
     event.preventDefault();
+    if (authBusy.current) return;
     setMessage("");
+    if (!validEmail) { setMessage("Please enter a valid email address."); return; }
+    if (!password || new TextEncoder().encode(password).length > 72) { setMessage("Enter a valid password of at most 72 bytes."); return; }
+    authBusy.current = true;
     setLoading(true);
 
     try {
@@ -325,24 +343,35 @@ function App() {
 
       setEmail("");
       setPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+      setShowConfirm(false);
     } catch (error) {
       console.error("Login error:", error);
       setMessage("Unable to connect to the server.");
     } finally {
+      authBusy.current = false;
       setLoading(false);
     }
   }
 
   async function handleRegister(event) {
     event.preventDefault();
+    if (authBusy.current) return;
     setMessage("");
+    if (!validEmail) { setMessage("Please enter a valid email address."); return; }
+    if (!password || new TextEncoder().encode(password).length > 72) { setMessage("Enter a valid password of at most 72 bytes."); return; }
+    if (name.trim().length < 2 || name.trim().length > 100) { setMessage("Name must contain 2 to 100 characters."); return; }
+    if (passwordScore !== 6) { setMessage("Please meet all password requirements."); return; }
+    if (password !== confirmPassword) { setMessage("Passwords do not match."); return; }
+    authBusy.current = true;
     setLoading(true);
 
     try {
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, emailType }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password, emailType }),
       });
 
       const data = await response.json();
@@ -356,17 +385,27 @@ function App() {
       setName("");
       setEmail("");
       setPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+      setShowConfirm(false);
       setEmailType("personal");
       setIsRegistering(false);
     } catch (error) {
       console.error("Registration error:", error);
       setMessage("Unable to connect to the server.");
     } finally {
+      authBusy.current = false;
       setLoading(false);
     }
   }
 
-  function handleLogout() {
+  function handleLogout(notice = "") {
+    if (typeof notice !== "string") notice = "";
+    setPassword("");
+    setConfirmPassword("");
+    setShowPassword(false);
+    setShowConfirm(false);
+    closeReviewModal();
     localStorage.removeItem("appointmentToken");
     localStorage.removeItem("appointmentUser");
     localStorage.removeItem("appointmentProvider");
@@ -385,7 +424,7 @@ function App() {
     setPatientPhone("");
     setPatientPlace("");
     setReason("");
-    setMessage("");
+    setMessage(notice);
     setLoginType("patient");
     setIsRegistering(false);
   }
@@ -434,6 +473,7 @@ function App() {
 
       const data = await response.json();
 
+      if (response.status === 401) { handleLogout("Session expired. Please sign in again."); return; }
       if (!response.ok) {
         setMessage(data.message || "Failed to book appointment.");
         return;
@@ -467,6 +507,7 @@ function App() {
 
       const data = await response.json();
 
+      if (response.status === 401) { handleLogout("Session expired. Please sign in again."); return; }
       if (!response.ok) {
         setMessage(data.message || "Failed to update appointment status.");
         return;
@@ -492,6 +533,7 @@ function App() {
 
       const data = await response.json();
 
+      if (response.status === 401) { handleLogout("Session expired. Please sign in again."); return; }
       if (!response.ok) {
         setMessage(data.message || "Failed to cancel appointment.");
         return;
@@ -547,6 +589,7 @@ function App() {
 
       const data = await response.json();
 
+      if (response.status === 401) { handleLogout("Session expired. Please sign in again."); return; }
       if (!response.ok) {
         setMessage(data.message || "Failed to submit review.");
         setReviewSubmitting(false);
@@ -811,11 +854,14 @@ function App() {
                   <div className="medcare-role-switch" role="group" aria-label="Account type">
                     <button type="button"
                       className={`medcare-role-option ${!isDoctor ? "active" : ""}`}
-                      aria-pressed={!isDoctor}
+                      disabled={loading} aria-pressed={!isDoctor}
                       onClick={() => {
                         setLoginType("patient");
                         setEmail("");
                         setPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+      setShowConfirm(false);
                         setMessage("");
                       }}>
                       <span className="medcare-role-symbol">P</span>
@@ -823,11 +869,14 @@ function App() {
                     </button>
                     <button type="button"
                       className={`medcare-role-option ${isDoctor ? "active" : ""}`}
-                      aria-pressed={isDoctor}
+                      disabled={loading} aria-pressed={isDoctor}
                       onClick={() => {
                         setLoginType("provider");
                         setEmail("");
                         setPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+      setShowConfirm(false);
                         setMessage("");
                       }}>
                       <span className="medcare-role-symbol">D</span>
@@ -848,9 +897,12 @@ function App() {
                     </div>
                     <div className="input-group">
                       <label htmlFor="medcare-password">Password</label>
-                      <input id="medcare-password" type="password" value={password}
+                      <div className="medcare-password-wrap">
+                      <input id="medcare-password" type={showPassword ? "text" : "password"} value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder="Enter your password" autoComplete="current-password" required />
+                      <button type="button" className="medcare-password-toggle" aria-controls="medcare-password" onClick={() => setShowPassword(v => !v)}>{showPassword ? "Hide" : "Show"}</button>
+                      </div>
                     </div>
                     <button className="medcare-submit" type="submit" disabled={loading}>
                       {loading ? "Signing in..." : `Sign in as ${isDoctor ? "Doctor" : "Patient"}`}
@@ -859,10 +911,13 @@ function App() {
                   {!isDoctor && (
                     <p className="medcare-auth-switch">
                       New to MedCare?{" "}
-                      <button type="button" onClick={() => {
+                      <button type="button" disabled={loading} onClick={() => {
                         setIsRegistering(true);
                         setMessage("");
                         setPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+      setShowConfirm(false);
                       }}>Create an account</button>
                     </p>
                   )}
@@ -884,18 +939,32 @@ function App() {
                     </div>
                     <div className="input-group">
                       <label htmlFor="medcare-register-password">Password</label>
-                      <input id="medcare-register-password" type="password" value={password}
+                      <div className="medcare-password-wrap">
+                      <input id="medcare-register-password" type={showPassword ? "text" : "password"} value={password}
                         onChange={(event) => setPassword(event.target.value)}
-                        placeholder="At least 6 characters" autoComplete="new-password"
-                        minLength={6} required />
+                        placeholder="At least 8 characters" autoComplete="new-password" minLength={8} required aria-describedby="password-rules" />
+                      <button type="button" className="medcare-password-toggle" aria-controls="medcare-register-password" onClick={() => setShowPassword(v => !v)}>{showPassword ? "Hide" : "Show"}</button>
+                      </div>
+                      <div id="password-rules" className="medcare-password-rules">
+                        <div className="medcare-password-meter" aria-hidden="true">{passwordRules.map(([label], i) => <span key={label} className={passwordScore > i ? (passwordScore === 6 ? "met" : "partial") : ""} />)}</div>
+                        <strong>{passwordScore === 6 ? "All requirements met" : `${passwordScore}/6 requirements met`}</strong>
+                        <ul>{passwordRules.map(([label, ok]) => <li key={label} className={ok ? "password-ok" : ""}>{ok ? "✓" : "○"} {label}</li>)}</ul>
+                      </div>
+                    </div>
+                    <div className="input-group">
+                      <label htmlFor="medcare-confirm-password">Confirm password</label>
+                      <div className="medcare-password-wrap">
+                        <input id="medcare-confirm-password" type={showConfirm ? "text" : "password"} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} autoComplete="new-password" required />
+                        <button type="button" className="medcare-password-toggle" onClick={() => setShowConfirm(v => !v)}>{showConfirm ? "Hide" : "Show"}</button>
+                      </div>
+                      {confirmPassword && <small className={password === confirmPassword ? "password-ok" : "password-error"}>{password === confirmPassword ? "Passwords match" : "Passwords do not match"}</small>}
                     </div>
                     <div className="input-group">
                       <label htmlFor="medcare-email-type">Email category</label>
                       <select id="medcare-email-type" value={emailType}
                         onChange={(event) => setEmailType(event.target.value)}>
                         <option value="personal">Personal</option>
-                        <option value="college">Student / College</option>
-                        <option value="work">Work / Corporate</option>
+                        <option value="office">Work / College / Organization</option>
                       </select>
                     </div>
                     <button className="medcare-submit" type="submit" disabled={loading}>
@@ -904,10 +973,13 @@ function App() {
                   </form>
                   <p className="medcare-auth-switch">
                     Already registered?{" "}
-                    <button type="button" onClick={() => {
+                    <button type="button" disabled={loading} onClick={() => {
                       setIsRegistering(false);
                       setLoginType("patient");
                       setPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+      setShowConfirm(false);
                       setMessage("");
                     }}>Sign in</button>
                   </p>
@@ -1090,7 +1162,7 @@ function App() {
                 type="tel"
                 value={patientPhone}
                 onChange={(e) => setPatientPhone(e.target.value)}
-                placeholder="e.g. +91 9876543210"
+                placeholder="e.g. +919876543210"
                 required
               />
             </div>
