@@ -191,6 +191,142 @@ Response:
 ```
 
 The frontend and backend communicate using REST APIs and JSON.
+## Database Design
+
+MedCare uses MongoDB Atlas as its cloud database and Mongoose for schema definition, validation and database operations.
+
+The database consists of three primary collections: Users, Providers and Appointments.
+
+### Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    USER ||--o{ APPOINTMENT : books
+    PROVIDER ||--o{ APPOINTMENT : manages
+
+    USER {
+        ObjectId _id PK
+        String name
+        String email UK
+        String password
+        String emailType
+        String role
+        Date createdAt
+        Date updatedAt
+    }
+
+    PROVIDER {
+        ObjectId _id PK
+        String name
+        String email UK
+        String password
+        String providerType
+        String specialization
+        String phone
+        String organization
+        String role
+        Date createdAt
+        Date updatedAt
+    }
+
+    APPOINTMENT {
+        ObjectId _id PK
+        ObjectId provider FK
+        ObjectId patient FK
+        String date
+        String time
+        String phone
+        String place
+        String reason
+        String status
+        Number rating
+        String feedback
+        Date createdAt
+        Date updatedAt
+    }
+```
+
+### Users Collection
+
+Stores patient account information and authentication details.
+
+| Field | Data Type | Description |
+|---|---|---|
+| _id | ObjectId | Unique patient identifier |
+| name | String | Patient name |
+| email | String | Unique email address |
+| password | String | Password hash |
+| emailType | String | Personal or office email |
+| role | String | Defaults to user |
+| createdAt | Date | Account creation timestamp |
+| updatedAt | Date | Last modification timestamp |
+
+### Providers Collection
+
+Stores doctor and service provider profiles.
+
+| Field | Data Type | Description |
+|---|---|---|
+| _id | ObjectId | Unique provider identifier |
+| name | String | Provider name |
+| email | String | Unique email address |
+| password | String | Password hash |
+| providerType | String | Doctor, staff or service-provider |
+| specialization | String | Professional specialization |
+| phone | String | Contact number |
+| organization | String | Associated organization |
+| role | String | Defaults to provider |
+| createdAt | Date | Profile creation timestamp |
+| updatedAt | Date | Last modification timestamp |
+
+### Appointments Collection
+
+Stores appointment bookings, scheduling information, status and patient feedback.
+
+| Field | Data Type | Description |
+|---|---|---|
+| _id | ObjectId | Unique appointment identifier |
+| provider | ObjectId | Reference to Provider |
+| patient | ObjectId | Reference to User |
+| date | String | Appointment date |
+| time | String | Appointment time |
+| phone | String | Patient contact number |
+| place | String | Appointment location |
+| reason | String | Reason for appointment |
+| status | String | Current appointment status |
+| rating | Number | Patient rating from 1 to 5 |
+| feedback | String | Patient review |
+| createdAt | Date | Booking creation timestamp |
+| updatedAt | Date | Last modification timestamp |
+
+### Database Relationships
+
+- One patient can book multiple appointments.
+- One provider can manage multiple appointments.
+- Each appointment references one patient and one provider using MongoDB ObjectId references.
+
+### Schema Validation
+
+- Unique email indexes for patient and provider accounts.
+- Required field validation.
+- Email normalization using lowercase and trim.
+- Enum validation for account types and appointment status.
+- Rating validation between 1 and 5.
+- Automatic creation and modification timestamps.
+- Default values for optional fields.
+
+### Appointment Status Values
+
+| Status | Description |
+|---|---|
+| pending | Appointment awaiting confirmation |
+| confirmed | Appointment confirmed |
+| completed | Appointment completed |
+| cancelled | Appointment cancelled |
+
+New appointments are assigned the pending status by default.
+
+
 
 ## Installation and Setup
 
